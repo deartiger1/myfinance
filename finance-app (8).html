@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MyFinance — Personal Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131929;
+    --surface2: #1a2235;
+    --surface3: #212d44;
+    --border: #2a3a57;
+    --accent: #3b82f6;
+    --accent2: #06b6d4;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --text: #e8edf5;
+    --text2: #8fa3c1;
+    --text3: #4d6180;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,15,26,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+  }
+  .nav-brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; }
+  .nav-brand span { color: var(--accent); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    background: none; border: none; color: var(--text2);
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500;
+    padding: 7px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  .nav-tab.active { background: var(--surface2); color: var(--text); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 20px 16px 100px; max-width: 600px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-family: sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* AMOUNT DISPLAY */
+  .amount-big {
+    font-family: sans-serif;
+    font-size: 1.9rem; font-weight: 700;
+    letter-spacing: -0.5px; color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .amount-sub { font-size: 0.8rem; color: var(--text3); margin-top: 4px; }
+
+  /* INPUTS */
+  .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .input-group { flex: 1; }
+  .input-label { font-size: 0.72rem; color: var(--text3); margin-bottom: 5px; font-weight: 500; letter-spacing: 0.3px; }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+    padding: 10px 16px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+  .btn-sm { padding: 6px 10px; font-size: 0.78rem; }
+  .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 8px; }
+
+  /* ROW ITEMS */
+  .item-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .item-row:last-child { margin-bottom: 0; }
+  .item-name { flex: 1; font-size: 0.88rem; font-weight: 500; }
+  .item-amount { font-family: sans-serif; font-size: 0.92rem; font-weight: 600; color: var(--accent2); font-variant-numeric: tabular-nums; }
+  .item-del { cursor: pointer; color: var(--text3); font-size: 0.8rem; padding: 4px; border-radius: 6px; background: none; border: none; transition: color 0.2s; }
+  .item-del:hover { color: var(--red); }
+
+  /* DIVIDER LINE */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+  /* TOTAL ROW */
+  .total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0 0;
+  }
+  .total-label { font-size: 0.82rem; color: var(--text2); font-weight: 500; }
+  .total-val { font-family: sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  /* BADGE */
+  .badge {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 20px; text-transform: uppercase;
+  }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--gold); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent); }
+
+  /* UPCOMING PAYMENT ITEM */
+  .payment-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 12px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .payment-item.confirmed { border-color: rgba(16,185,129,0.25); }
+  .payment-check {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid var(--border);
+    background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0; color: #fff;
+    font-size: 0.75rem;
+  }
+  .payment-check.confirmed { background: var(--green); border-color: var(--green); }
+  .payment-name { flex: 1; font-size: 0.88rem; font-weight: 500; }
+  .payment-currency { font-size: 0.72rem; color: var(--text3); }
+  .payment-del { cursor: pointer; color: var(--text3); background: none; border: none; font-size: 0.8rem; padding: 4px; border-radius: 6px; transition: color 0.2s; }
+  .payment-del:hover { color: var(--red); }
+
+  /* STATUS CHECK */
+  .status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .status-row.pass { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+  .status-row.fail { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+  .status-label { font-size: 0.82rem; color: var(--text2); }
+  .status-icon { font-size: 1.1rem; }
+
+  /* SUMMARY */
+  .summary-big {
+    background: linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 10px;
+  }
+  .summary-label { font-size: 0.72rem; color: var(--text3); letter-spacing: 0.5px; font-weight: 500; margin-bottom: 6px; }
+  .summary-val { font-family: sans-serif; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .summary-val.green { color: var(--green); }
+  .summary-val.blue { color: var(--accent); }
+
+  /* CHART */
+  .chart-wrap { position: relative; margin-top: 10px; }
+  canvas { max-width: 100%; }
+
+  /* INVESTMENTS */
+  .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .inv-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .inv-card .label { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .inv-card .val { font-family: sans-serif; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .inv-card .val.gold { color: var(--gold); }
+  .inv-card .val.green { color: var(--green); }
+  .inv-card .val.purple { color: var(--purple); }
+  .inv-card .val.blue { color: var(--accent); }
+
+  /* STOCK TABLE */
+  .stock-table { width: 100%; font-size: 0.8rem; border-collapse: separate; border-spacing: 0 4px; }
+  .stock-table th { color: var(--text3); font-weight: 500; text-align: left; padding: 4px 8px; font-size: 0.7rem; letter-spacing: 0.5px; }
+  .stock-table td { background: var(--surface2); padding: 9px 8px; }
+  .stock-table td:first-child { border-radius: 8px 0 0 8px; font-weight: 500; }
+  .stock-table td:last-child { border-radius: 0 8px 8px 0; }
+
+  /* PILL INPUT AREA */
+  .add-area {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 10px;
+  }
+
+  /* USD RATE INDICATOR */
+  .rate-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 10px;
+    margin-bottom: 14px;
+  }
+  .rate-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+  /* LOADING */
+  .loading { opacity: 0.5; font-size: 0.8rem; color: var(--text3); text-align: center; padding: 10px; }
+
+  /* ADD ROW INLINE */
+  .inline-add { display: flex; gap: 8px; margin-top: 10px; }
+  .inline-add input { flex: 1; }
+
+  /* SEPARATOR TEXT */
+  .sep-text {
+    font-family: sans-serif;
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text3);
+    text-align: center;
+    margin: 18px 0 12px;
+    position: relative;
+  }
+  .sep-text::before, .sep-text::after {
+    content: '';
+    position: absolute; top: 50%;
+    width: 28%; height: 1px;
+    background: var(--border);
+  }
+  .sep-text::before { left: 0; }
+  .sep-text::after { right: 0; }
+
+  /* BOTTOM FAB */
+  .fab-area { height: 16px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media (max-width: 400px) {
+    .amount-big { font-size: 1.6rem; }
+    .inv-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOCK SCREEN ===== -->
+<div id="lockscreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#0b0f1a; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px;">
+  <div style="width:100%; max-width:360px;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div style="font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; letter-spacing:-1px; margin-bottom:6px;">My<span style="color:var(--accent)">Finance</span></div>
+      <div style="font-size:0.85rem; color:var(--text3);">Your personal finance dashboard</div>
+    </div>
+
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; box-shadow:var(--shadow);">
+      <div style="font-family:'Syne',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-bottom:18px; text-align:center;">🔒 Enter Password</div>
+
+      <div style="position:relative; margin-bottom:14px;">
+        <input type="password" id="pwd-input" placeholder="Password" autocomplete="current-password"
+          style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:'DM Sans',sans-serif; font-size:1rem; padding:13px 44px 13px 16px; outline:none; transition:border-color 0.2s; letter-spacing:2px;">
+        <button id="pwd-toggle" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text3); cursor:pointer; font-size:1rem; padding:4px;">👁</button>
+      </div>
+
+      <div id="pwd-error" style="color:var(--red); font-size:0.78rem; text-align:center; margin-bottom:10px; min-height:18px;"></div>
+
+      <button id="btn-unlock" style="width:100%; background:var(--accent); border:none; border-radius:var(--radius-sm); color:#fff; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; padding:13px; cursor:pointer; transition:opacity 0.2s;">Unlock</button>
+
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+        <div style="font-size:0.7rem; color:var(--text3); text-align:center; margin-bottom:10px; letter-spacing:0.3px;">CHANGE PASSWORD</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <input type="password" id="cur-pwd" placeholder="Current password" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.88rem; padding:10px 14px; outline:none;">
+          <input type="password" id="new-pwd1" placeholder="New password" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.88rem; padding:10px 14px; outline:none;">
+          <input type="password" id="new-pwd2" placeholder="Confirm new password" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.88rem; padding:10px 14px; outline:none;">
+          <button id="btn-set-pwd" style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text2); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; padding:10px; cursor:pointer;">Set New Password</button>
+          <div id="set-pwd-msg" style="font-size:0.78rem; text-align:center; min-height:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px; font-size:0.72rem; color:var(--text3);">🔐 Remembered on this device</div>
+  </div>
+</div>
+
+<div id="app-wrapper" style="display:none;">
+<nav>
+  <div class="nav-brand">My<span>Finance</span></div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="sync-status" style="font-size:0.7rem;color:var(--text3);">☁️</span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showSection('finance', this)">Finance</button>
+      <button class="nav-tab" onclick="showSection('invest', this)">Invest</button>
+      <button class="nav-tab" onclick="showSection('charts', this)">Charts</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== FINANCE SECTION ===== -->
+<div class="section active" id="s-finance">
+
+  <!-- Summary (pinned to top) -->
+  <div class="card" style="background:linear-gradient(135deg,#131929,#1a2940); border-color:#2a3a57;">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>Summary</div>
+    <div class="summary-big" style="margin-bottom:8px;">
+      <div class="summary-label">ALL TOTAL INCOME (Without Unconfirmed)</div>
+      <div class="summary-val green" id="sum-without">₹0</div>
+      <div class="amount-sub" id="sum-without-breakdown">Bank (₹0) + Confirmed (₹0)</div>
+    </div>
+    <div class="summary-big">
+      <div class="summary-label">ALL TOTAL INCOME (Including Unconfirmed)</div>
+      <div class="summary-val blue" id="sum-with">₹0</div>
+      <div class="amount-sub" id="sum-with-breakdown">Bank (₹0) + Confirmed (₹0) + Unconfirmed (₹0)</div>
+    </div>
+    <hr class="divider">
+    <div class="status-row" id="status-without">
+      <span class="status-label">Without Unconfirmed ≥ Monthly Expenses</span>
+      <span class="status-icon">⏳</span>
+    </div>
+    <div class="status-row" id="status-with">
+      <span class="status-label">Including Unconfirmed ≥ Monthly Expenses</span>
+      <span class="status-icon">⏳</span>
+    </div>
+    <hr class="divider">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:0.72rem;color:var(--text3);letter-spacing:0.4px;margin-bottom:5px;">REMAINING AFTER EXPENSES (Confirmed Only)</div>
+        <div style="font-family:sans-serif;font-size:1.15rem;font-weight:800;" id="remain-conf">₹0</div>
+        <div style="font-size:0.75rem;color:var(--text3);margin-top:3px;">Without Unconfirmed − Monthly Expenses</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:0.72rem;color:var(--text3);letter-spacing:0.4px;margin-bottom:5px;">REMAINING AFTER EXPENSES (With Unconfirmed)</div>
+        <div style="font-family:sans-serif;font-size:1.15rem;font-weight:800;" id="remain-unconf">₹0</div>
+        <div style="font-size:0.75rem;color:var(--text3);margin-top:3px;">With Unconfirmed − Monthly Expenses</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Balance -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Bank Balance</div>
+    <div class="input-row">
+      <div class="input-group">
+        <div class="input-label">SBI (₹)</div>
+        <input type="number" id="sbi" placeholder="0" oninput="save();recalc()">
+      </div>
+      <div class="input-group">
+        <div class="input-label">Kotak (₹)</div>
+        <input type="number" id="kotak" placeholder="0" oninput="save();recalc()">
+      </div>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total Bank Balance</span>
+      <span class="total-val" id="total-bank">₹0</span>
+    </div>
+  </div>
+
+  <!-- Fixed Expenses -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--red)"></span>Monthly Fixed Expenses</div>
+    <div id="fixed-list"></div>
+    <div class="add-area">
+      <div class="input-label">Add Expense</div>
+      <div class="inline-add">
+        <input type="text" id="fx-name" placeholder="Name (e.g. Rent)">
+        <input type="number" id="fx-amt" placeholder="₹ Amount" style="max-width:120px">
+        <button class="btn btn-primary btn-sm" id="btn-add-fixed">+</button>
+      </div>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total Fixed Expenses</span>
+      <span class="total-val" style="color:var(--red)" id="total-fixed">₹0</span>
+    </div>
+  </div>
+
+  <div class="sep-text">Dynamic Expenses</div>
+
+  <!-- Dynamic Expenses -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--gold)"></span>Dynamic Expenses</div>
+    <div id="dyn-list"></div>
+    <div class="add-area">
+      <div class="input-label">Add Dynamic Expense</div>
+      <div class="inline-add">
+        <input type="text" id="dy-name" placeholder="Name (e.g. Credit Card)">
+        <input type="number" id="dy-amt" placeholder="₹ Amount" style="max-width:120px">
+        <button class="btn btn-primary btn-sm" id="btn-add-dyn">+</button>
+      </div>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total Monthly Expenses</span>
+      <span class="total-val" style="color:var(--gold)" id="total-monthly">₹0</span>
+    </div>
+  </div>
+
+  <!-- Upcoming Payments -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Upcoming Payments</div>
+    <div class="rate-chip"><span class="rate-dot"></span><span id="usd-rate-txt">1 USD ≈ ₹83.50 (loading...)</span></div>
+    <div id="payment-list"></div>
+    <div class="add-area">
+      <div class="input-label">Add Payment</div>
+      <div class="inline-add" style="flex-wrap:wrap; gap:6px;">
+        <input type="text" id="pay-name" placeholder="Name" style="flex:1; min-width:90px;">
+        <input type="number" id="pay-amt" placeholder="Amount" style="max-width:100px;">
+        <select id="pay-cur" style="max-width:70px;">
+          <option value="INR">₹ INR</option>
+          <option value="USD">$ USD</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="btn-add-pay" style="white-space:nowrap;">+</button>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="total-row"><span class="total-label">Total Confirmed</span><span class="total-val" style="color:var(--green)" id="total-pay-conf">₹0</span></div>
+    <div class="total-row"><span class="total-label">Total Unconfirmed</span><span class="total-val" style="color:var(--text2)" id="total-pay-unconf">₹0</span></div>
+    <div class="total-row"><span class="total-label">Total (Both)</span><span class="total-val" style="color:var(--accent2)" id="total-pay-all">₹0</span></div>
+  </div>
+
+
+</div>
+
+<!-- ===== INVESTMENTS SECTION ===== -->
+<div class="section" id="s-invest">
+
+  <!-- Bank (fetched) -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Bank Balance (from Finance)</div>
+    <div class="amount-big" id="inv-bank">₹0</div>
+    <div class="amount-sub">SBI + Kotak</div>
+  </div>
+
+  <!-- Stocks -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>Stocks</div>
+    <div id="stocks-table-wrap">
+      <table class="stock-table">
+        <thead><tr><th>Stock</th><th>Qty</th><th>Rate ₹</th><th>Total ₹</th><th></th></tr></thead>
+        <tbody id="stocks-body"></tbody>
+      </table>
+    </div>
+    <div class="add-area" style="margin-top:10px;">
+      <div class="input-label">Add Stock</div>
+      <div style="display:grid; grid-template-columns:1fr 70px 90px; gap:6px; margin-bottom:8px;">
+        <input type="text" id="st-name" placeholder="Stock name">
+        <input type="number" id="st-qty" placeholder="Qty">
+        <input type="number" id="st-rate" placeholder="₹/share">
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-add-stock">+ Add Stock</button>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total Stocks Value</span>
+      <span class="total-val" style="color:var(--green)" id="total-stocks">₹0</span>
+    </div>
+  </div>
+
+  <!-- Gold -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--gold)"></span>Gold</div>
+    <div class="input-row">
+      <div class="input-group">
+        <div class="input-label">Amount Invested (₹)</div>
+        <input type="number" id="gold-amt" placeholder="0" oninput="save();recalc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Mutual Funds -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--purple)"></span>Mutual Funds</div>
+    <div id="mf-list"></div>
+    <div class="add-area">
+      <div class="input-label">Add Mutual Fund</div>
+      <div class="inline-add">
+        <input type="text" id="mf-name" placeholder="Fund name">
+        <input type="number" id="mf-amt" placeholder="₹ Amount" style="max-width:120px;">
+        <button class="btn btn-primary btn-sm" id="btn-add-mf">+</button>
+      </div>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total Mutual Funds</span>
+      <span class="total-val" style="color:var(--purple)" id="total-mf">₹0</span>
+    </div>
+  </div>
+
+  <!-- Other Investments Grid -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Other Investments</div>
+    <div class="inv-grid">
+      <div class="inv-card">
+        <div class="label">PPF</div>
+        <input type="number" id="ppf" placeholder="₹0" oninput="save();recalc()" style="background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;font-size:1rem;font-family:sans-serif;font-weight:700;color:var(--text2);width:100%;">
+      </div>
+      <div class="inv-card">
+        <div class="label">RD</div>
+        <input type="number" id="rd" placeholder="₹0" oninput="save();recalc()" style="background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;font-size:1rem;font-family:sans-serif;font-weight:700;color:var(--text2);width:100%;">
+      </div>
+      <div class="inv-card">
+        <div class="label">Fund 1</div>
+        <input type="number" id="fund1" placeholder="₹0" oninput="save();recalc()" style="background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;font-size:1rem;font-family:sans-serif;font-weight:700;color:var(--text2);width:100%;">
+      </div>
+      <div class="inv-card">
+        <div class="label">Fund 2</div>
+        <input type="number" id="fund2" placeholder="₹0" oninput="save();recalc()" style="background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;font-size:1rem;font-family:sans-serif;font-weight:700;color:var(--text2);width:100%;">
+      </div>
+      <div class="inv-card" style="grid-column: span 2;">
+        <div class="label">Fund 3</div>
+        <input type="number" id="fund3" placeholder="₹0" oninput="save();recalc()" style="background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;font-size:1rem;font-family:sans-serif;font-weight:700;color:var(--text2);width:100%;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Money Lent -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent)"></span>Money Lent</div>
+    <div id="lent-list"></div>
+    <div class="add-area">
+      <div class="input-label">Add Person</div>
+      <div class="inline-add">
+        <input type="text" id="lent-name" placeholder="Name">
+        <input type="number" id="lent-amt" placeholder="₹ Amount" style="max-width:120px;">
+        <button class="btn btn-primary btn-sm" id="btn-add-lent">+</button>
+      </div>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total Money Lent</span>
+      <span class="total-val" style="color:var(--accent)" id="total-lent">₹0</span>
+    </div>
+  </div>
+
+  <!-- Net Worth -->
+  <div class="card" style="background:linear-gradient(135deg,#131929,#1a2940);">
+    <div class="card-title"><span class="dot" style="background:var(--gold)"></span>Total Net Worth</div>
+    <div class="amount-big" id="net-worth" style="color:var(--gold); font-size:2.2rem;">₹0</div>
+    <div class="amount-sub">Bank + Stocks + Gold + MF + PPF + RD + Funds + Lent</div>
+  </div>
+</div>
+
+<!-- ===== CHARTS SECTION ===== -->
+<div class="section" id="s-charts">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--purple)"></span>Investment Breakdown</div>
+    <div class="chart-wrap"><canvas id="chart-inv"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--red)"></span>Expenses Overview</div>
+    <div class="chart-wrap"><canvas id="chart-exp"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>Cash Flow Summary</div>
+    <div class="chart-wrap"><canvas id="chart-flow"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Upcoming Payments</div>
+    <div class="chart-wrap"><canvas id="chart-pay"></canvas></div>
+  </div>
+</div>
+
+<div class="fab-area"></div>
+</div><!-- end app-wrapper -->
+
+<script type="module">
+// ===== FIREBASE SETUP =====
+// 👇 REPLACE these values with your own Firebase project config
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyA-0p7wcVP_ETcG2oKFsTlAhxgwaU2eht4",
+  authDomain:        "myfinance-ba4ef.firebaseapp.com",
+  databaseURL:       "https://myfinance-ba4ef-default-rtdb.firebaseio.com",
+  projectId:         "myfinance-ba4ef",
+  storageBucket:     "myfinance-ba4ef.firebasestorage.app",
+  messagingSenderId: "1003406102731",
+  appId:             "1:1003406102731:web:0a56363651aa2f53fb8b4e"
+};
+
+import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const fbApp = initializeApp(FIREBASE_CONFIG);
+const db    = getDatabase(fbApp);
+const DATA_REF = ref(db, 'myfinance/data');
+
+let saveTimer = null;
+let cloudLoaded = false;
+
+// ===== STATE =====
+let state = {
+  sbi: '', kotak: '',
+  fixedExpenses: [], dynExpenses: [],
+  payments: [],
+  stocks: [], gold: '', mfList: [],
+  ppf: '', rd: '', fund1: '', fund2: '', fund3: '',
+  lentList: [],
+  usdRate: 83.5
+};
+
+let charts = {};
+
+// ===== SYNC INDICATOR =====
+function setSyncStatus(status) {
+  // status: 'saving' | 'saved' | 'offline'
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (status === 'saving') { el.textContent = '⏳ Saving...'; el.style.color = 'var(--gold)'; }
+  if (status === 'saved')  { el.textContent = '☁️ Synced';    el.style.color = 'var(--green)'; }
+  if (status === 'offline'){ el.textContent = '📴 Offline';   el.style.color = 'var(--text3)'; }
+}
+
+// ===== PERSIST — CLOUD FIRST, LOCALSTORAGE FALLBACK =====
+function save() {
+  // Collect direct inputs
+  state.sbi   = document.getElementById('sbi').value;
+  state.kotak = document.getElementById('kotak').value;
+  state.gold  = document.getElementById('gold-amt').value;
+  state.ppf   = document.getElementById('ppf').value;
+  state.rd    = document.getElementById('rd').value;
+  state.fund1 = document.getElementById('fund1').value;
+  state.fund2 = document.getElementById('fund2').value;
+  state.fund3 = document.getElementById('fund3').value;
+
+  // Always save to localStorage as offline backup
+  const toSave = { ...state }; delete toSave.usdRate;
+  localStorage.setItem('mf-state', JSON.stringify(toSave));
+
+  // Debounced cloud save (wait 800ms after last change)
+  setSyncStatus('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await set(DATA_REF, toSave);
+      setSyncStatus('saved');
+    } catch(e) {
+      setSyncStatus('offline');
+    }
+  }, 800);
+}
+
+function applyState(saved) {
+  Object.assign(state, saved);
+  const ids  = ['sbi','kotak','gold-amt','ppf','rd','fund1','fund2','fund3'];
+  const keys = ['sbi','kotak','gold','ppf','rd','fund1','fund2','fund3'];
+  ids.forEach((id,i) => { const el = document.getElementById(id); if(el) el.value = state[keys[i]] || ''; });
+}
+
+function load() {
+  // 1. Load localStorage immediately so UI isn't blank
+  const raw = localStorage.getItem('mf-state');
+  if (raw) { try { applyState(JSON.parse(raw)); } catch(e) {} }
+
+  // 2. Listen for cloud data — updates in real time across all devices
+  onValue(DATA_REF, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      applyState(data);
+      localStorage.setItem('mf-state', JSON.stringify(data)); // keep local copy fresh
+      if (cloudLoaded) {
+        // Live update — re-render everything if already showing
+        renderFixed(); renderDynamic(); renderPayments();
+        renderStocks(); renderMF(); renderLent(); recalc();
+      }
+      cloudLoaded = true;
+      setSyncStatus('saved');
+    }
+  }, (err) => {
+    setSyncStatus('offline');
+  });
+}
+
+// ===== SECTION NAV =====
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('s-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'charts') { setTimeout(renderCharts, 100); }
+  if (name === 'invest') { recalc(); }
+}
+
+// ===== USD RATE =====
+async function fetchRate() {
+  try {
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const d = await r.json();
+    state.usdRate = d.rates.INR || 83.5;
+  } catch(e) { state.usdRate = 83.5; }
+  document.getElementById('usd-rate-txt').textContent = `1 USD ≈ ₹${state.usdRate.toFixed(2)} (live)`;
+  recalc();
+}
+
+// ===== FORMAT =====
+function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function num(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function numV(v) { return parseFloat(v) || 0; }
+
+// ===== FIXED EXPENSES =====
+function renderFixed() {
+  const el = document.getElementById('fixed-list');
+  el.innerHTML = state.fixedExpenses.map((e,i) => `
+    <div class="item-row">
+      <span class="item-name">${e.name}</span>
+      <span class="item-amount">${fmt(e.amount)}</span>
+      <button class="item-del" data-action="del-fixed" data-i="${i}">✕</button>
+    </div>`).join('') || '<div class="loading">No fixed expenses added</div>';
+}
+function addFixed() {
+  const n = document.getElementById('fx-name').value.trim();
+  const a = parseFloat(document.getElementById('fx-amt').value);
+  if (!n || !a) return;
+  state.fixedExpenses.push({name:n, amount:a});
+  document.getElementById('fx-name').value = '';
+  document.getElementById('fx-amt').value = '';
+  renderFixed(); save(); recalc();
+}
+function delFixed(i) { state.fixedExpenses.splice(i,1); renderFixed(); save(); recalc(); }
+
+// ===== DYNAMIC EXPENSES =====
+function renderDynamic() {
+  const el = document.getElementById('dyn-list');
+  el.innerHTML = state.dynExpenses.map((e,i) => `
+    <div class="item-row">
+      <span class="item-name">${e.name}</span>
+      <span class="item-amount" style="color:var(--gold)">${fmt(e.amount)}</span>
+      <button class="item-del" data-action="del-dyn" data-i="${i}">✕</button>
+    </div>`).join('') || '<div class="loading">No dynamic expenses added</div>';
+}
+function addDynamic() {
+  const n = document.getElementById('dy-name').value.trim();
+  const a = parseFloat(document.getElementById('dy-amt').value);
+  if (!n || !a) return;
+  state.dynExpenses.push({name:n, amount:a});
+  document.getElementById('dy-name').value = '';
+  document.getElementById('dy-amt').value = '';
+  renderDynamic(); save(); recalc();
+}
+function delDynamic(i) { state.dynExpenses.splice(i,1); renderDynamic(); save(); recalc(); }
+
+// ===== PAYMENTS =====
+function renderPayments() {
+  const el = document.getElementById('payment-list');
+  if (!state.payments.length) { el.innerHTML = '<div class="loading">No payments added</div>'; return; }
+  el.innerHTML = state.payments.map((p,i) => {
+    const inr = p.currency === 'USD' ? p.amount * state.usdRate : p.amount;
+    const conf = p.confirmed;
+    return `<div class="payment-item ${conf?'confirmed':''}">
+      <button class="payment-check ${conf?'confirmed':''}" data-action="toggle-pay" data-i="${i}">${conf?'✓':''}</button>
+      <div style="flex:1;">
+        <div class="payment-name">${p.name}</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+          <span style="font-family:sans-serif;font-size:0.82rem;font-weight:700;color:${conf?'var(--green)':'var(--text2)'};">${fmt(inr)}</span>
+          ${p.currency==='USD'?`<span class="payment-currency">($${p.amount})</span>`:''}
+          <span class="badge ${conf?'badge-green':'badge-amber'}">${conf?'Confirmed':'Unconfirmed'}</span>
+        </div>
+      </div>
+      <button class="payment-del" data-action="del-pay" data-i="${i}">✕</button>
+    </div>`;
+  }).join('');
+}
+function addPayment() {
+  const n = document.getElementById('pay-name').value.trim();
+  const a = parseFloat(document.getElementById('pay-amt').value);
+  const c = document.getElementById('pay-cur').value;
+  if (!n || !a) return;
+  state.payments.push({name:n, amount:a, currency:c, confirmed:false});
+  document.getElementById('pay-name').value = '';
+  document.getElementById('pay-amt').value = '';
+  renderPayments(); save(); recalc();
+}
+function togglePayment(i) { state.payments[i].confirmed = !state.payments[i].confirmed; renderPayments(); save(); recalc(); }
+function delPayment(i) { state.payments.splice(i,1); renderPayments(); save(); recalc(); }
+
+// ===== STOCKS =====
+function renderStocks() {
+  const tbody = document.getElementById('stocks-body');
+  tbody.innerHTML = state.stocks.map((s,i) => {
+    const total = s.qty * s.rate;
+    return `<tr>
+      <td>${s.name}</td>
+      <td>${s.qty}</td>
+      <td>${s.rate.toLocaleString('en-IN')}</td>
+      <td style="color:var(--green);font-weight:700;">${Math.round(total).toLocaleString('en-IN')}</td>
+      <td><button class="item-del" data-action="del-stock" data-i="${i}">✕</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="loading">No stocks added</td></tr>';
+}
+function addStock() {
+  const n = document.getElementById('st-name').value.trim();
+  const q = parseFloat(document.getElementById('st-qty').value);
+  const r = parseFloat(document.getElementById('st-rate').value);
+  if (!n || !q || !r) return;
+  state.stocks.push({name:n, qty:q, rate:r});
+  document.getElementById('st-name').value = '';
+  document.getElementById('st-qty').value = '';
+  document.getElementById('st-rate').value = '';
+  renderStocks(); save(); recalc();
+}
+function delStock(i) { state.stocks.splice(i,1); renderStocks(); save(); recalc(); }
+
+// ===== MUTUAL FUNDS =====
+function renderMF() {
+  const el = document.getElementById('mf-list');
+  el.innerHTML = state.mfList.map((m,i) => `
+    <div class="item-row">
+      <span class="item-name">${m.name}</span>
+      <span class="item-amount" style="color:var(--purple)">${fmt(m.amount)}</span>
+      <button class="item-del" data-action="del-mf" data-i="${i}">✕</button>
+    </div>`).join('') || '<div class="loading">No mutual funds added</div>';
+}
+function addMF() {
+  const n = document.getElementById('mf-name').value.trim();
+  const a = parseFloat(document.getElementById('mf-amt').value);
+  if (!n || !a) return;
+  state.mfList.push({name:n, amount:a});
+  document.getElementById('mf-name').value = '';
+  document.getElementById('mf-amt').value = '';
+  renderMF(); save(); recalc();
+}
+function delMF(i) { state.mfList.splice(i,1); renderMF(); save(); recalc(); }
+
+// ===== MONEY LENT =====
+function renderLent() {
+  const el = document.getElementById('lent-list');
+  el.innerHTML = state.lentList.map((l,i) => `
+    <div class="item-row">
+      <span class="item-name">${l.name}</span>
+      <span class="item-amount" style="color:var(--accent)">${fmt(l.amount)}</span>
+      <button class="item-del" data-action="del-lent" data-i="${i}">✕</button>
+    </div>`).join('') || '<div class="loading">No entries</div>';
+}
+function addLent() {
+  const n = document.getElementById('lent-name').value.trim();
+  const a = parseFloat(document.getElementById('lent-amt').value);
+  if (!n || !a) return;
+  state.lentList.push({name:n, amount:a});
+  document.getElementById('lent-name').value = '';
+  document.getElementById('lent-amt').value = '';
+  renderLent(); save(); recalc();
+}
+function delLent(i) { state.lentList.splice(i,1); renderLent(); save(); recalc(); }
+
+// ===== RECALC ALL =====
+function recalc() {
+  // Bank
+  const sbi = num('sbi'), kotak = num('kotak');
+  const totalBank = sbi + kotak;
+  document.getElementById('total-bank').textContent = fmt(totalBank);
+
+  // Fixed
+  const totalFixed = state.fixedExpenses.reduce((s,e)=>s+e.amount,0);
+  document.getElementById('total-fixed').textContent = fmt(totalFixed);
+
+  // Dynamic
+  const totalDyn = state.dynExpenses.reduce((s,e)=>s+e.amount,0);
+  const totalMonthly = totalFixed + totalDyn;
+  document.getElementById('total-monthly').textContent = fmt(totalMonthly);
+
+  // Payments
+  let confTotal = 0, unconfTotal = 0;
+  state.payments.forEach(p => {
+    const inr = p.currency === 'USD' ? p.amount * state.usdRate : p.amount;
+    if (p.confirmed) confTotal += inr; else unconfTotal += inr;
+  });
+  document.getElementById('total-pay-conf').textContent = fmt(confTotal);
+  document.getElementById('total-pay-unconf').textContent = fmt(unconfTotal);
+  document.getElementById('total-pay-all').textContent = fmt(confTotal + unconfTotal);
+
+  // Summary
+  const sumWithout = totalBank + confTotal;
+  const sumWith = totalBank + confTotal + unconfTotal;
+  document.getElementById('sum-without').textContent = fmt(sumWithout);
+  document.getElementById('sum-with').textContent = fmt(sumWith);
+  document.getElementById('sum-without-breakdown').textContent = `Bank (${fmt(totalBank)}) + Confirmed (${fmt(confTotal)})`;
+  document.getElementById('sum-with-breakdown').textContent = `Bank (${fmt(totalBank)}) + Confirmed (${fmt(confTotal)}) + Unconfirmed (${fmt(unconfTotal)})`;
+
+  // Remaining balance
+  const remainConf = sumWithout - totalMonthly;
+  const remainAll  = sumWith   - totalMonthly;
+  const remConfEl  = document.getElementById('remain-conf');
+  const remAllEl   = document.getElementById('remain-unconf');
+  remConfEl.textContent  = fmt(remainConf);
+  remConfEl.style.color  = remainConf >= 0 ? 'var(--green)' : 'var(--red)';
+  remAllEl.textContent   = fmt(remainAll);
+  remAllEl.style.color   = remainAll  >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Status
+  const sw = document.getElementById('status-without');
+  const si = document.getElementById('status-with');
+  if (totalMonthly === 0) {
+    sw.className = 'status-row'; sw.querySelector('.status-icon').textContent = '⏳';
+    si.className = 'status-row'; si.querySelector('.status-icon').textContent = '⏳';
+  } else {
+    sw.className = 'status-row ' + (sumWithout >= totalMonthly ? 'pass' : 'fail');
+    sw.querySelector('.status-icon').textContent = sumWithout >= totalMonthly ? '✅' : '❌';
+    si.className = 'status-row ' + (sumWith >= totalMonthly ? 'pass' : 'fail');
+    si.querySelector('.status-icon').textContent = sumWith >= totalMonthly ? '✅' : '❌';
+  }
+
+  // Investments
+  document.getElementById('inv-bank').textContent = fmt(totalBank);
+  const totalStocks = state.stocks.reduce((s,st)=>s+(st.qty*st.rate),0);
+  document.getElementById('total-stocks').textContent = fmt(totalStocks);
+  const totalMF = state.mfList.reduce((s,m)=>s+m.amount,0);
+  document.getElementById('total-mf').textContent = fmt(totalMF);
+  const totalLent = state.lentList.reduce((s,l)=>s+l.amount,0);
+  document.getElementById('total-lent').textContent = fmt(totalLent);
+  const gold = num('gold-amt'), ppf = num('ppf'), rd = num('rd');
+  const fund1 = num('fund1'), fund2 = num('fund2'), fund3 = num('fund3');
+  const netWorth = totalBank + totalStocks + gold + totalMF + ppf + rd + fund1 + fund2 + fund3 + totalLent;
+  document.getElementById('net-worth').textContent = fmt(netWorth);
+}
+
+// ===== CHARTS =====
+const COLORS = ['#3b82f6','#06b6d4','#10b981','#f59e0b','#8b5cf6','#ef4444','#f97316','#ec4899','#14b8a6','#a78bfa'];
+const chartDefaults = {
+  plugins: { legend: { labels: { color: '#8fa3c1', font: { family: 'DM Sans', size: 11 }, boxWidth: 12, padding: 16 } } },
+  scales: {
+    x: { ticks: { color: '#4d6180', font:{family:'DM Sans',size:10} }, grid: { color: '#1a2235' } },
+    y: { ticks: { color: '#4d6180', font:{family:'DM Sans',size:10}, callback: v => '₹'+v.toLocaleString('en-IN') }, grid: { color: '#1a2235' } }
+  }
+};
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts() {
+  const totalBank = (parseFloat(state.sbi)||0) + (parseFloat(state.kotak)||0);
+  const totalStocks = state.stocks.reduce((s,st)=>s+(st.qty*st.rate),0);
+  const gold = parseFloat(state.gold)||0;
+  const totalMF = state.mfList.reduce((s,m)=>s+m.amount,0);
+  const ppf = parseFloat(state.ppf)||0, rd = parseFloat(state.rd)||0;
+  const fund1 = parseFloat(state.fund1)||0, fund2 = parseFloat(state.fund2)||0, fund3 = parseFloat(state.fund3)||0;
+  const totalLent = state.lentList.reduce((s,l)=>s+l.amount,0);
+  const totalFixed = state.fixedExpenses.reduce((s,e)=>s+e.amount,0);
+  const totalDyn = state.dynExpenses.reduce((s,e)=>s+e.amount,0);
+  let confTotal = 0, unconfTotal = 0;
+  state.payments.forEach(p => {
+    const inr = p.currency==='USD' ? p.amount*state.usdRate : p.amount;
+    if(p.confirmed) confTotal+=inr; else unconfTotal+=inr;
+  });
+
+  // Investment pie
+  destroyChart('inv');
+  const invCtx = document.getElementById('chart-inv').getContext('2d');
+  charts['inv'] = new Chart(invCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Bank','Stocks','Gold','Mutual Funds','PPF','RD','Funds','Lent'],
+      datasets: [{ data: [totalBank,totalStocks,gold,totalMF,ppf,rd,(fund1+fund2+fund3),totalLent], backgroundColor: COLORS, borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { color:'#8fa3c1', font:{family:'DM Sans',size:11}, boxWidth:12, padding:14 } } }, cutout: '62%' }
+  });
+
+  // Expense bar
+  destroyChart('exp');
+  const expCtx = document.getElementById('chart-exp').getContext('2d');
+  const expLabels = [...state.fixedExpenses.map(e=>e.name), ...state.dynExpenses.map(e=>e.name)];
+  const expVals = [...state.fixedExpenses.map(e=>e.amount), ...state.dynExpenses.map(e=>e.amount)];
+  charts['exp'] = new Chart(expCtx, {
+    type: 'bar',
+    data: {
+      labels: expLabels.length ? expLabels : ['No data'],
+      datasets: [{ label: 'Amount (₹)', data: expLabels.length ? expVals : [0], backgroundColor: expLabels.slice(0,expLabels.length).map((_,i)=>COLORS[i%COLORS.length]), borderRadius: 8, borderSkipped: false }]
+    },
+    options: { ...chartDefaults, plugins: { legend: { display: false } } }
+  });
+
+  // Cash flow
+  destroyChart('flow');
+  const flowCtx = document.getElementById('chart-flow').getContext('2d');
+  charts['flow'] = new Chart(flowCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Bank Balance','Confirmed In','Unconfirmed In','Monthly Expenses'],
+      datasets: [{ data: [totalBank,confTotal,unconfTotal,totalFixed+totalDyn], backgroundColor: ['#3b82f6','#10b981','#8fa3c1','#ef4444'], borderRadius: 10, borderSkipped: false }]
+    },
+    options: { ...chartDefaults, plugins: { legend: { display: false } }, indexAxis: 'y', scales: { x: chartDefaults.scales.x, y: { ticks:{color:'#8fa3c1',font:{family:'DM Sans',size:10}}, grid:{display:false} } } }
+  });
+
+  // Payments pie
+  destroyChart('pay');
+  const payCtx = document.getElementById('chart-pay').getContext('2d');
+  const payLabels = state.payments.map(p=>p.name);
+  const payVals = state.payments.map(p=> p.currency==='USD'? p.amount*state.usdRate : p.amount);
+  charts['pay'] = new Chart(payCtx, {
+    type: 'pie',
+    data: {
+      labels: payLabels.length ? payLabels : ['No data'],
+      datasets: [{ data: payLabels.length ? payVals : [1], backgroundColor: COLORS, borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { color:'#8fa3c1', font:{family:'DM Sans',size:11}, boxWidth:12, padding:12 } } } }
+  });
+}
+
+// ===== AUTH / LOCK =====
+const DEFAULT_PWD = 'finance123'; // default password
+const DEVICE_KEY  = 'mf-auth-token';
+const PWD_KEY     = 'mf-pwd-hash';
+const APP_EL      = document.getElementById('app-wrapper');
+const LOCK_EL     = document.getElementById('lockscreen');
+
+function hashPwd(pwd) {
+  // Simple deterministic hash (not cryptographic, but enough for local use)
+  let h = 0;
+  for (let i = 0; i < pwd.length; i++) { h = Math.imul(31, h) + pwd.charCodeAt(i) | 0; }
+  return 'h' + Math.abs(h).toString(36);
+}
+
+function getStoredHash() {
+  return localStorage.getItem(PWD_KEY) || hashPwd(DEFAULT_PWD);
+}
+
+function isDeviceTrusted() {
+  return localStorage.getItem(DEVICE_KEY) === getStoredHash();
+}
+
+function trustDevice() {
+  localStorage.setItem(DEVICE_KEY, getStoredHash());
+}
+
+function showApp() {
+  LOCK_EL.style.display = 'none';
+  document.getElementById('app-wrapper').style.display = 'block';
+  load(); renderFixed(); renderDynamic(); renderPayments();
+  renderStocks(); renderMF(); renderLent(); recalc(); fetchRate();
+  // wire up event listeners now that DOM is visible
+  wireListeners();
+}
+
+function showLock() {
+  LOCK_EL.style.display = 'flex';
+  document.getElementById('app-wrapper').style.display = 'none';
+}
+
+// Unlock button
+document.getElementById('btn-unlock').addEventListener('click', function() {
+  const val = document.getElementById('pwd-input').value;
+  const errEl = document.getElementById('pwd-error');
+  if (hashPwd(val) === getStoredHash()) {
+    trustDevice();
+    errEl.textContent = '';
+    showApp();
+  } else {
+    errEl.textContent = 'Incorrect password. Try again.';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+});
+
+document.getElementById('pwd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-unlock').click();
+});
+
+// Show/hide password toggle
+document.getElementById('pwd-toggle').addEventListener('click', function() {
+  const inp = document.getElementById('pwd-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  this.textContent = inp.type === 'password' ? '👁' : '🙈';
+});
+
+// Set new password — requires current password first
+document.getElementById('btn-set-pwd').addEventListener('click', function() {
+  const cur = document.getElementById('cur-pwd').value;
+  const p1  = document.getElementById('new-pwd1').value;
+  const p2  = document.getElementById('new-pwd2').value;
+  const msg = document.getElementById('set-pwd-msg');
+  if (!cur) { msg.style.color = 'var(--red)'; msg.textContent = 'Enter your current password.'; return; }
+  if (hashPwd(cur) !== getStoredHash()) { msg.style.color = 'var(--red)'; msg.textContent = '✗ Current password is wrong.'; document.getElementById('cur-pwd').value = ''; return; }
+  if (!p1) { msg.style.color = 'var(--red)'; msg.textContent = 'New password cannot be empty.'; return; }
+  if (p1.length < 4) { msg.style.color = 'var(--red)'; msg.textContent = 'Use at least 4 characters.'; return; }
+  if (p1 !== p2) { msg.style.color = 'var(--red)'; msg.textContent = 'New passwords do not match.'; return; }
+  localStorage.setItem(PWD_KEY, hashPwd(p1));
+  trustDevice();
+  msg.style.color = 'var(--green)';
+  msg.textContent = '✓ Password updated successfully!';
+  document.getElementById('cur-pwd').value = '';
+  document.getElementById('new-pwd1').value = '';
+  document.getElementById('new-pwd2').value = '';
+});
+
+// Boot check
+if (isDeviceTrusted()) {
+  showApp();
+} else {
+  showLock();
+}
+
+function wireListeners() {
+// ===== EVENT LISTENERS =====
+document.getElementById('btn-add-fixed').addEventListener('click', addFixed);
+document.getElementById('btn-add-dyn').addEventListener('click', addDynamic);
+document.getElementById('btn-add-pay').addEventListener('click', addPayment);
+document.getElementById('btn-add-stock').addEventListener('click', addStock);
+document.getElementById('btn-add-mf').addEventListener('click', addMF);
+document.getElementById('btn-add-lent').addEventListener('click', addLent);
+
+// Enter key support for add inputs
+[['fx-name','fx-amt'],['dy-name','dy-amt'],['pay-name','pay-amt'],['st-name','st-rate'],['mf-name','mf-amt'],['lent-name','lent-amt']].forEach(([a,b])=>{
+  [a,b].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('btn-add-'+id.split('-')[0])?.click(); });
+  });
+});
+
+// Delegated click handler for dynamic buttons (delete/toggle)
+document.body.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const i = parseInt(btn.dataset.i);
+  if (action === 'del-fixed')  { state.fixedExpenses.splice(i,1); renderFixed(); save(); recalc(); }
+  if (action === 'del-dyn')    { state.dynExpenses.splice(i,1); renderDynamic(); save(); recalc(); }
+  if (action === 'del-pay')    { state.payments.splice(i,1); renderPayments(); save(); recalc(); }
+  if (action === 'toggle-pay') { state.payments[i].confirmed = !state.payments[i].confirmed; renderPayments(); save(); recalc(); }
+  if (action === 'del-stock')  { state.stocks.splice(i,1); renderStocks(); save(); recalc(); }
+  if (action === 'del-mf')     { state.mfList.splice(i,1); renderMF(); save(); recalc(); }
+  if (action === 'del-lent')   { state.lentList.splice(i,1); renderLent(); save(); recalc(); }
+});
+}
+</script>
+</body>
+</html>
